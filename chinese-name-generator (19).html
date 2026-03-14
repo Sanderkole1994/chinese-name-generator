@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>起名 · Chinese Name Generator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#b41e1e;--red-deep:#8a1515;--gold:#c8963e;
+  --gold-soft:rgba(200,150,50,0.22);--cream:#e8dcc8;
+  --cream-dim:rgba(232,220,200,0.55);--cream-faint:rgba(232,220,200,0.18);
+  --bg:#0d0a0a;
+}
+html,body{min-height:100vh;background:var(--bg);color:var(--cream);font-family:'IM Fell English',Georgia,serif;display:flex;align-items:flex-start;justify-content:center;padding:1.5rem 1rem 3rem;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 20% 50%,rgba(180,30,30,.09) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(200,150,50,.07) 0%,transparent 50%)}
+.deco-ring{position:fixed;border-radius:50%;pointer-events:none;z-index:0;border:1px solid rgba(180,30,30,.13)}
+.dr1{width:420px;height:420px;top:-110px;right:-110px}
+.dr2{width:520px;height:520px;bottom:-160px;left:-90px;border-color:rgba(200,150,50,.09)}
+/* Hide side characters on narrow screens — they overlap content */
+.deco-char{position:fixed;color:rgba(180,30,30,.065);font-size:4.5rem;font-weight:bold;writing-mode:vertical-rl;pointer-events:none;z-index:0;top:50%;transform:translateY(-50%);letter-spacing:.5rem}
+.dl1{left:1%}.dl2{left:5%}.dr1c{right:1%}.dr2c{right:5%}
+.wrap{position:relative;z-index:1;width:100%;max-width:580px}
+
+/* Header */
+.header{text-align:center;margin-bottom:2rem}
+.header-han{font-size:3.8rem;letter-spacing:.8rem;color:var(--gold);line-height:1;margin-bottom:.2rem}
+.header-title{font-family:'Cinzel',serif;font-size:.85rem;letter-spacing:.4rem;text-transform:uppercase;color:var(--cream);font-weight:400}
+.divider{width:60px;height:1px;margin:1rem auto;background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.header-sub{color:var(--cream-dim);font-size:.78rem;letter-spacing:.06rem;font-style:italic;padding:0 .5rem}
+
+/* Card */
+.card{background:rgba(255,255,255,.03);border:1px solid var(--gold-soft);padding:1.5rem;position:relative}
+.card::before{content:'';position:absolute;inset:3px;border:1px solid rgba(200,150,50,.08);pointer-events:none}
+.field-row{display:flex;gap:.75rem}
+.field-row .field{flex:1}
+.field{margin-bottom:1.1rem}
+.field:last-of-type{margin-bottom:0}
+label{display:flex;align-items:center;gap:.5rem;color:var(--gold);font-size:.65rem;letter-spacing:.18rem;text-transform:uppercase;margin-bottom:.38rem;font-family:'Cinzel',serif}
+.lbl-han{font-family:'IM Fell English',Georgia,serif;font-size:1rem;opacity:.85}
+input{
+  width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(200,150,50,.25);
+  padding:.75rem 1rem;color:var(--cream);font-size:1rem;/* 1rem prevents iOS zoom */
+  font-family:'IM Fell English',Georgia,serif;outline:none;
+  transition:border-color .25s,background .25s;
+  -webkit-appearance:none;border-radius:0;/* Remove iOS default styling */
+  min-height:44px;/* Apple touch target minimum */
+}
+input::placeholder{color:rgba(232,220,200,.25)}
+input:focus{border-color:rgba(180,30,30,.6);background:rgba(180,30,30,.05)}
+
+/* Gender toggle */
+.gender-row{display:flex;gap:.75rem}
+.gender-btn{
+  flex:1;padding:.75rem .5rem;background:rgba(255,255,255,.04);
+  border:1px solid rgba(200,150,50,.25);color:var(--cream-dim);
+  font-size:.68rem;letter-spacing:.15rem;text-transform:uppercase;
+  cursor:pointer;font-family:'Cinzel',serif;transition:all .25s;
+  min-height:44px;/* Touch target */
+  -webkit-tap-highlight-color:transparent;
+}
+.gender-btn.active-f{background:rgba(180,100,120,.15);border-color:rgba(200,100,130,.5);color:#e8b4c0}
+.gender-btn.active-m{background:rgba(50,100,180,.12);border-color:rgba(80,130,200,.4);color:#a8c4e8}
+.gender-btn:hover{border-color:rgba(200,150,50,.5);color:var(--cream)}
+
+.btn{
+  width:100%;padding:1rem;background:linear-gradient(135deg,var(--red),var(--red-deep));
+  border:none;color:#f5e6c8;font-size:.75rem;letter-spacing:.25rem;text-transform:uppercase;
+  cursor:pointer;font-family:'Cinzel',serif;transition:all .3s;margin-top:1.1rem;
+  min-height:48px;-webkit-tap-highlight-color:transparent;
+}
+.btn:hover{background:linear-gradient(135deg,#c42525,#9a1f1f)}
+.btn:active{background:linear-gradient(135deg,#9a1515,#7a1010);transform:scale(.99)}
+.btn:disabled{background:rgba(100,100,100,.2);color:rgba(255,255,255,.3);cursor:not-allowed}
+
+/* Result */
+.result{margin-top:1.5rem;background:rgba(180,30,30,.06);border:1px solid rgba(180,30,30,.3);padding:1.5rem;text-align:center;display:none}
+.result.show{display:block;animation:fadeUp .7s ease forwards}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.result-label{font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.28rem;text-transform:uppercase;color:rgba(200,150,50,.6);margin-bottom:.9rem}
+.result-name{font-size:clamp(3.5rem,15vw,5.5rem);color:var(--cream);letter-spacing:.5rem;line-height:1;margin-bottom:.5rem;text-shadow:0 0 40px rgba(180,30,30,.35)}
+.result-pinyin{font-size:clamp(.9rem,4vw,1.1rem);color:var(--gold);letter-spacing:.2rem;margin-bottom:.35rem;font-style:italic}
+.result-romanized{font-size:clamp(.65rem,3vw,.78rem);color:var(--cream-dim);letter-spacing:.08rem;margin-bottom:1.1rem;font-style:italic}
+.result-divider{width:40px;height:1px;background:rgba(180,30,30,.4);margin:0 auto 1.1rem}
+.result-parts{display:flex;justify-content:center;gap:1.5rem;margin-bottom:1rem}
+.result-part{text-align:center}
+.result-part-label{font-family:'Cinzel',serif;font-size:.52rem;letter-spacing:.18rem;text-transform:uppercase;color:rgba(200,150,50,.5);margin-bottom:.2rem}
+.result-part-char{font-size:clamp(1.6rem,6vw,2rem);color:var(--cream)}
+.result-part-py{font-size:.65rem;color:var(--gold);font-style:italic;margin-top:.12rem}
+.sep{width:1px;background:rgba(200,150,50,.2)}
+.result-meaning{color:var(--cream-dim);font-size:clamp(.72rem,3vw,.8rem);font-style:italic;margin-bottom:.85rem}
+.element-badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(200,150,50,.07);border:1px solid rgba(200,150,50,.2);padding:.3rem .7rem;font-family:'Cinzel',serif;font-size:.56rem;letter-spacing:.12rem;color:rgba(200,150,50,.8);text-transform:uppercase;margin-bottom:.5rem;flex-wrap:wrap;justify-content:center;text-align:center}
+
+/* Reasoning */
+.result-reasoning{margin-top:1.2rem;text-align:left}
+.reasoning-divider{width:100%;height:1px;background:rgba(200,150,50,.15);margin-bottom:1rem}
+.reasoning-label{font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.22rem;text-transform:uppercase;color:rgba(200,150,50,.55);margin-bottom:.8rem;text-align:center}
+.reasoning-grid{display:flex;flex-direction:column;gap:.55rem}
+.reasoning-row{display:flex;gap:.7rem;align-items:flex-start;background:rgba(255,255,255,.02);border-left:2px solid rgba(180,30,30,.35);padding:.55rem .7rem}
+.reasoning-icon{font-size:.95rem;flex-shrink:0;line-height:1.5;min-width:1.3rem;text-align:center}
+.reasoning-text{font-size:clamp(.7rem,3vw,.76rem);color:var(--cream-dim);line-height:1.72}
+.reasoning-text strong{color:var(--gold);font-style:normal;font-weight:normal}
+.reasoning-text em{color:var(--cream);font-style:italic}
+
+/* Classical quote */
+.classical-block{margin-top:1rem;background:rgba(180,30,30,.04);border:1px solid rgba(180,30,30,.18);padding:.85rem 1rem;text-align:center}
+.classical-chinese{font-size:clamp(.85rem,4vw,1rem);color:var(--gold);letter-spacing:.25rem;margin-bottom:.28rem}
+.classical-source{font-size:.55rem;color:rgba(232,220,200,.38);font-family:'Cinzel',serif;letter-spacing:.12rem;text-transform:uppercase;margin-bottom:.32rem}
+.classical-trans{font-size:clamp(.65rem,3vw,.72rem);color:var(--cream-dim);font-style:italic}
+
+/* Download button */
+.share-btn{
+  display:none;width:100%;margin-top:1.2rem;padding:.85rem 1rem;
+  background:transparent;border:1px solid rgba(200,150,50,.35);
+  color:var(--gold);font-size:.68rem;letter-spacing:.22rem;text-transform:uppercase;
+  cursor:pointer;font-family:'Cinzel',serif;transition:all .3s;
+  min-height:48px;-webkit-tap-highlight-color:transparent;
+}
+.share-btn:hover{background:rgba(200,150,50,.08);border-color:var(--gold)}
+.share-btn:active{background:rgba(200,150,50,.14);transform:scale(.99)}
+.share-btn.visible{display:block}
+
+.footer{text-align:center;color:var(--cream-faint);font-size:.58rem;letter-spacing:.08rem;margin-top:1.5rem;font-family:'Cinzel',serif;padding:0 .5rem}
+
+/* ── Mobile responsive breakpoints ─────────────────────────── */
+@media (max-width: 480px) {
+  html,body{padding:1rem .75rem 2.5rem}
+  .header-han{font-size:3rem;letter-spacing:.6rem}
+  .header-title{font-size:.75rem;letter-spacing:.28rem}
+  .header-sub{font-size:.72rem}
+  .header{margin-bottom:1.5rem}
+  /* Stack first/last name vertically on very small screens */
+  .field-row{flex-direction:column;gap:0}
+  .field-row .field{flex:none;width:100%}
+  .card{padding:1.25rem}
+  .result{padding:1.25rem}
+  .result-name{letter-spacing:.35rem}
+  .result-parts{gap:1rem}
+  /* Hide decorative side characters completely on mobile */
+  .deco-char{display:none}
+  .deco-ring{display:none}
+  .btn{font-size:.7rem;letter-spacing:.2rem}
+  .gender-btn{font-size:.62rem;letter-spacing:.1rem}
+}
+
+@media (max-width: 360px) {
+  .header-han{font-size:2.6rem}
+  .result-name{font-size:3rem}
+  .card{padding:1rem}
+  .result{padding:1rem}
+}
+</style>
+</head>
+<body>
+<div class="deco-ring dr1"></div>
+<div class="deco-ring dr2"></div>
+<div class="deco-char dl1">福寿</div>
+<div class="deco-char dl2">雅</div>
+<div class="deco-char dr1c">慧志</div>
+<div class="deco-char dr2c">明</div>
+
+<div class="wrap">
+  <div class="header">
+    <div class="header-han">起名</div>
+    <div class="header-title">Chinese Name Generator</div>
+    <div class="divider"></div>
+    <div class="header-sub">A name is the first gift — chosen with sound, meaning, and destiny</div>
+  </div>
+
+  <div class="card">
+    <div class="field-row">
+      <div class="field">
+        <label><span class="lbl-han">名</span> First Name</label>
+        <input id="inp-firstname" type="text" placeholder="e.g. Sophie, Jan, Merel…"/>
+      </div>
+      <div class="field">
+        <label><span class="lbl-han">姓</span> Last Name</label>
+        <input id="inp-lastname" type="text" placeholder="e.g. de Vries, Bakker…"/>
+      </div>
+    </div>
+    <div class="field">
+      <label><span class="lbl-han">性</span> Gender</label>
+      <div class="gender-row">
+        <button class="gender-btn" id="btn-female" onclick="selectGender('female')">♀ &nbsp;Female 女</button>
+        <button class="gender-btn" id="btn-male"   onclick="selectGender('male')">♂ &nbsp;Male 男</button>
+      </div>
+    </div>
+    <div class="field">
+      <label><span class="lbl-han">趣</span> Favourite Hobby</label>
+      <input id="inp-hobby" type="text" placeholder="e.g. muziek, lezen, sport, koken, kunst…"/>
+    </div>
+    <div class="field">
+      <label><span class="lbl-han">愿</span> Your Wish</label>
+      <input id="inp-job" type="text" placeholder="e.g. peace, strength, wisdom, love, adventure…"/>
+    </div>
+    <button class="btn" id="gen-btn" onclick="generate()" disabled>Generate My Name &nbsp;生成名字</button>
+  </div>
+
+  <div class="result" id="result">
+    <div class="result-label" id="res-gender-label">Your Chinese Name</div>
+    <div class="result-name" id="res-full"></div>
+    <div class="result-pinyin" id="res-pinyin"></div>
+    <div class="result-romanized" id="res-romanized"></div>
+    <div class="result-divider"></div>
+    <div class="result-parts">
+      <div class="result-part">
+        <div class="result-part-label">Surname 姓</div>
+        <div class="result-part-char" id="res-surname"></div>
+        <div class="result-part-py"   id="res-surname-py"></div>
+      </div>
+      <div class="sep"></div>
+      <div class="result-part">
+        <div class="result-part-label">Given Name 名</div>
+        <div class="result-part-char" id="res-given"></div>
+        <div class="result-part-py"   id="res-given-py"></div>
+      </div>
+    </div>
+    <div class="result-meaning" id="res-meaning"></div>
+    <div id="res-element-badge"></div>
+    <div class="result-reasoning">
+      <div class="reasoning-divider"></div>
+      <div class="reasoning-label">The Art Behind Your Name</div>
+      <div class="reasoning-grid" id="res-reasoning-grid"></div>
+    </div>
+    <div class="classical-block" id="res-classical" style="display:none">
+      <div class="classical-chinese" id="res-classical-text"></div>
+      <div class="classical-source"  id="res-classical-source"></div>
+      <div class="classical-trans"   id="res-classical-trans"></div>
+    </div>
+    <button class="share-btn" id="share-btn" onclick="shareCard()">⬇ Download Name Card as Photo</button>
+    <canvas id="share-canvas" style="display:none"></canvas>
+  </div>
+
+  <div class="footer">名以载志，音以传情 &nbsp;·&nbsp; A name carries ambition; its sound carries the heart</div>
+</div>
+
+<script>
+/* ── State ─────────────────────────────────────────────────────── */
+let selectedGender = null;
+
+function selectGender(g) {
+  selectedGender = g;
+  document.getElementById('btn-female').className = 'gender-btn' + (g==='female' ? ' active-f' : '');
+  document.getElementById('btn-male').className   = 'gender-btn' + (g==='male'   ? ' active-m' : '');
+  checkReady();
+}
+function checkReady() {
+  const name = document.getElementById('inp-firstname').value.trim();
+  document.getElementById('gen-btn').disabled = !(name && selectedGender);
+}
+document.getElementById('inp-firstname').addEventListener('input', checkReady);
+document.querySelectorAll('input').forEach(inp => inp.addEventListener('keydown', e => { if(e.key==='Enter') generate(); }));
+
+/* ── Surnames ──────────────────────────────────────────────────── */
+const SURNAMES = {
+  a:{char:"安",py:"Ān",  el:"earth",meaning:"peace and stability",history:"Traced to Han dynasty envoys from Anxi (Parthia). 安 means 'peace' — one of the most auspicious of all Chinese surnames, linked to diplomacy and calm governance."},
+  b:{char:"白",py:"Bái", el:"metal",meaning:"purity and clarity",history:"Ancient Zhou dynasty surname. 白 means 'white' or 'pure' — the surname of the Tang poet Bai Juyi, associated with moonlight and honesty."},
+  c:{char:"陈",py:"Chén",el:"earth",meaning:"ancient and enduring",history:"Royal house of the State of Chen (1045–478 BCE). One of China's most widespread surnames, carrying three thousand years of aristocratic legacy."},
+  d:{char:"丁",py:"Dīng",el:"fire", meaning:"strength and solidity",history:"One of the oldest surnames, depicted as a nail in ancient script — a symbol of structural strength dating to the Shang dynasty."},
+  e:{char:"鄂",py:"È",   el:"wood", meaning:"bold and untamed",history:"From the ancient frontier State of E. 鄂 evokes the energy of borderlands — bold, outspoken, and unwilling to be contained."},
+  f:{char:"方",py:"Fāng",el:"wood", meaning:"upright and principled",history:"Descended from Fang Shu of Zhou, celebrated for military virtue. 方 means 'square' — the symbol of moral uprightness in classical Chinese thought."},
+  g:{char:"高",py:"Gāo", el:"fire", meaning:"elevated and noble",history:"From the State of Qi. 高 means 'tall' — a spirit that reaches above the ordinary, of ambition that does not settle."},
+  h:{char:"何",py:"Hé",  el:"water",meaning:"gentle persistence",history:"From the Ji clan of Zhou. Legend: a family crossing the He River took it as their name. Carries the quality of flowing water."},
+  i:{char:"伊",py:"Yī",  el:"water",meaning:"graceful and wise",history:"Associated with Yi Yin who founded the Shang dynasty's golden age. Carries connotations of quiet wisdom and refined character."},
+  j:{char:"江",py:"Jiāng",el:"water",meaning:"vast and flowing",history:"From the ancient Yangtze basin state. 江 means 'river' — depth, persistence, and the life-giving force of flowing water."},
+  k:{char:"康",py:"Kāng",el:"metal",meaning:"health and abundance",history:"From the Duke of Kang of Zhou. 康 means 'wellness' — one of the most auspicious surname characters a family can carry."},
+  l:{char:"林",py:"Lín", el:"wood", meaning:"rooted and flourishing",history:"Descended from Bi Gan of the Shang. Two 木 trees side by side — vitality, growth, and deep roots. The character represents thriving life."},
+  m:{char:"马",py:"Mǎ",  el:"fire", meaning:"swift and spirited",history:"From Maqiu (Horse Hill). 马 — the horse — symbol of ambition, speed, and noble spirit across Chinese history."},
+  n:{char:"宁",py:"Níng",el:"water",meaning:"tranquil and deep",history:"From the Wei family of Wei State. 宁 means 'serenity' — the still surface of deep water, profound inner calm."},
+  o:{char:"欧",py:"Ōu",  el:"water",meaning:"expansive and gracious",history:"Simplified from Ouyang, surname of Song dynasty master writer Ouyang Xiu. Carries literary grace and expansive outlook."},
+  p:{char:"潘",py:"Pān", el:"water",meaning:"overflowing with life",history:"From Prince Pan of Zhou. 潘 suggests water spilling beyond its banks — abundance and vitality in full expression."},
+  q:{char:"钱",py:"Qián",el:"metal",meaning:"resourceful and valued",history:"From Zhou dynasty treasurer Peng Fu. Centuries of association with shrewdness and practical intelligence."},
+  r:{char:"任",py:"Rèn", el:"water",meaning:"responsible and capable",history:"Among the oldest Huangdi bloodline surnames. 任 means 'to bear responsibility' — those entrusted with great work."},
+  s:{char:"宋",py:"Sòng",el:"fire", meaning:"cultured and refined",history:"From the royal house of Shang after its fall. The Song dynasty (960–1279 CE) was China's golden age of poetry and painting."},
+  t:{char:"唐",py:"Táng",el:"fire", meaning:"glorious and cosmopolitan",history:"The Tang dynasty (618–907 CE) — China's most celebrated era of poetry, culture, and cosmopolitan brilliance."},
+  u:{char:"尤",py:"Yóu", el:"wood", meaning:"outstanding and remarkable",history:"From the Shen Nong clan. 尤 means 'especially outstanding' — those set apart from the ordinary by some remarkable quality."},
+  v:{char:"范",py:"Fàn", el:"water",meaning:"exemplary and principled",history:"From the Fan State. Linked to Fan Zhongyan: 'worry before the world worries; rejoice only after the world rejoices.'"},
+  w:{char:"王",py:"Wáng",el:"earth",meaning:"sovereign and dignified",history:"The most common surname in the world. Descended from the Zhou royal house. 王 means 'king' — the surname of emperors, poets, and calligraphers."},
+  x:{char:"徐",py:"Xú",  el:"water",meaning:"patient and steadfast",history:"From the benevolent Xu State. 徐 means slowness and patience — the unhurried confidence of one who knows their path."},
+  y:{char:"杨",py:"Yáng",el:"wood", meaning:"sunlit and alive",history:"The poplar tree — quick-growing, tall, always catching the light. Among the most common Chinese surnames, full of visible energy."},
+  z:{char:"张",py:"Zhāng",el:"fire",meaning:"expansive and reaching",history:"From the inventor of the bow and arrow, grandson of the Yellow Emperor. 张 contains 弓 (bow) — tension, reach, and skill."}
+};
+
+/* ── Five Elements ─────────────────────────────────────────────── */
+const WUXING = {
+  wood: {name:"Wood 木",  emoji:"🌿",virtue:"growth, vitality, and upward aspiration",season:"Spring",  generates:"fire" },
+  fire: {name:"Fire 火",  emoji:"🔥",virtue:"brilliance, passion, and outward expression",season:"Summer",  generates:"earth"},
+  earth:{name:"Earth 土", emoji:"🌏",virtue:"stability, nurturing, and deep-rootedness",season:"Late Summer",generates:"metal"},
+  metal:{name:"Metal 金", emoji:"✨",virtue:"precision, elegance, and refined excellence",season:"Autumn",  generates:"water"},
+  water:{name:"Water 水", emoji:"💧",virtue:"wisdom, adaptability, and quiet depth",season:"Winter",  generates:"wood" }
+};
+
+/* ── Gendered Phonetic Banks ───────────────────────────────────── */
+const PHONETIC_FEMALE = [
+  {char:"安",py:"an",  el:"earth",meaning:"serene and peaceful",        radical:"peace"},
+  {char:"艾",py:"ai",  el:"wood", meaning:"elegant as garden herbs",    radical:"艹 herb"},
+  {char:"冰",py:"bing",el:"water",meaning:"pure as winter ice",         radical:"water"},
+  {char:"婵",py:"chan",el:"water",meaning:"graceful as the moon",        radical:"女 female"},
+  {char:"晨",py:"chen",el:"fire", meaning:"golden morning light",        radical:"sun"},
+  {char:"春",py:"chun",el:"wood", meaning:"the warmth of spring",        radical:"sun"},
+  {char:"丹",py:"dan", el:"fire", meaning:"pure cinnabar red",           radical:"vermilion"},
+  {char:"朵",py:"duo", el:"wood", meaning:"a blossoming flower",         radical:"wood"},
+  {char:"恩",py:"en",  el:"water",meaning:"gracious kindness",           radical:"heart"},
+  {char:"芳",py:"fang",el:"wood", meaning:"fragrant virtue",             radical:"艹 flower"},
+  {char:"菲",py:"fei", el:"wood", meaning:"fragrant and lovely",         radical:"艹 flower"},
+  {char:"虹",py:"hong",el:"fire", meaning:"rainbow after rain",          radical:"nature"},
+  {char:"花",py:"hua", el:"wood", meaning:"in full blossom",             radical:"艹 flower"},
+  {char:"慧",py:"hui", el:"fire", meaning:"brilliant inner wisdom",      radical:"heart"},
+  {char:"嘉",py:"jia", el:"wood", meaning:"excellent and gracious",      radical:"woman"},
+  {char:"静",py:"jing",el:"water",meaning:"serene stillness",            radical:"blue"},
+  {char:"娟",py:"juan",el:"water",meaning:"graceful and lovely",         radical:"女 female"},
+  {char:"兰",py:"lan", el:"wood", meaning:"pure as an orchid",           radical:"艹 flower"},
+  {char:"磊",py:"lei", el:"earth",meaning:"upright as boulders",         radical:"stone"},
+  {char:"丽",py:"li",  el:"fire", meaning:"brilliant beauty",            radical:"beauty"},
+  {char:"莲",py:"lian",el:"water",meaning:"lotus rising from water",     radical:"艹 flower"},
+  {char:"灵",py:"ling",el:"water",meaning:"spiritually alive",           radical:"rain"},
+  {char:"露",py:"lu",  el:"water",meaning:"dewdrop on a petal",          radical:"rain"},
+  {char:"曼",py:"man", el:"water",meaning:"gracefully flowing",          radical:"silk"},
+  {char:"梅",py:"mei", el:"wood", meaning:"plum blossom in winter snow", radical:"wood"},
+  {char:"敏",py:"min", el:"metal",meaning:"quick and sharp-minded",      radical:"攴"},
+  {char:"明",py:"ming",el:"fire", meaning:"brilliantly clear",           radical:"sun+moon"},
+  {char:"娜",py:"na",  el:"water",meaning:"elegant strength",            radical:"女 female"},
+  {char:"妮",py:"ni",  el:"water",meaning:"tender and gentle",           radical:"女 female"},
+  {char:"宁",py:"ning",el:"water",meaning:"deep tranquillity",           radical:"roof"},
+  {char:"萍",py:"ping",el:"water",meaning:"floating with effortless grace",radical:"艹 plant"},
+  {char:"琪",py:"qi",  el:"metal",meaning:"beautiful jade",              radical:"玉 jade"},
+  {char:"琴",py:"qin", el:"metal",meaning:"the music of the zither",     radical:"玉 jade"},
+  {char:"清",py:"qing",el:"water",meaning:"crystal-clear water",         radical:"water"},
+  {char:"蓉",py:"rong",el:"wood", meaning:"lotus flower in bloom",       radical:"艹 flower"},
+  {char:"柔",py:"rou", el:"wood", meaning:"soft and gentle",             radical:"wood"},
+  {char:"珊",py:"shan",el:"metal",meaning:"coral beauty from the sea",   radical:"玉 jade"},
+  {char:"舒",py:"shu", el:"water",meaning:"ease and equanimity",         radical:"舌"},
+  {char:"淑",py:"shu", el:"water",meaning:"kindhearted and gentle",      radical:"water"},
+  {char:"婷",py:"ting",el:"water",meaning:"graceful poised elegance",    radical:"女 female"},
+  {char:"薇",py:"wei", el:"wood", meaning:"delicate trailing fern",      radical:"艹 flower"},
+  {char:"雯",py:"wen", el:"water",meaning:"clouds in beautiful patterns",radical:"rain"},
+  {char:"霞",py:"xia", el:"fire", meaning:"rosy dawn clouds",            radical:"rain"},
+  {char:"欣",py:"xin", el:"wood", meaning:"joyful and fresh",            radical:"欠 breath"},
+  {char:"馨",py:"xin", el:"metal",meaning:"lasting inner fragrance",     radical:"fragrance"},
+  {char:"雪",py:"xue", el:"water",meaning:"pure as fallen snow",         radical:"rain"},
+  {char:"晓",py:"xiao",el:"fire", meaning:"first light of dawn",         radical:"sun"},
+  {char:"雅",py:"ya",  el:"metal",meaning:"refined and elegant",         radical:"bird"},
+  {char:"燕",py:"yan", el:"fire", meaning:"graceful as a swallow",       radical:"bird"},
+  {char:"瑶",py:"yao", el:"metal",meaning:"precious jade stone",         radical:"玉 jade"},
+  {char:"怡",py:"yi",  el:"wood", meaning:"cheerful at heart",           radical:"heart"},
+  {char:"莹",py:"ying",el:"metal",meaning:"luminous jade-like beauty",   radical:"玉 jade"},
+  {char:"悦",py:"yue", el:"wood", meaning:"joyful and delightful",       radical:"heart"},
+  {char:"云",py:"yun", el:"water",meaning:"free as drifting clouds",     radical:"clouds"},
+  {char:"泽",py:"ze",  el:"water",meaning:"life-giving as a marsh",      radical:"water"},
+  {char:"珍",py:"zhen",el:"metal",meaning:"treasured and precious",      radical:"玉 jade"},
+  {char:"芝",py:"zhi", el:"wood", meaning:"auspicious sacred herb",      radical:"艹 plant"},
+];
+
+const PHONETIC_MALE = [
+  {char:"昂",py:"ang", el:"fire", meaning:"soaring and spirited",        radical:"sun"},
+  {char:"博",py:"bo",  el:"earth",meaning:"vast in learning",            radical:"十"},
+  {char:"冰",py:"bing",el:"water",meaning:"clear and unyielding",        radical:"water"},
+  {char:"昌",py:"chang",el:"fire",meaning:"prosperous and flourishing",  radical:"sun"},
+  {char:"晨",py:"chen",el:"fire", meaning:"the vigour of morning",       radical:"sun"},
+  {char:"承",py:"cheng",el:"earth",meaning:"to inherit and carry forward",radical:"hand"},
+  {char:"程",py:"cheng",el:"earth",meaning:"journeying far with purpose", radical:"禾"},
+  {char:"诚",py:"cheng",el:"metal",meaning:"honest and sincere",         radical:"言 speech"},
+  {char:"德",py:"de",  el:"earth",meaning:"virtue and moral character",  radical:"行 walk"},
+  {char:"栋",py:"dong",el:"wood", meaning:"the central pillar of a hall",radical:"木 tree"},
+  {char:"恩",py:"en",  el:"water",meaning:"grace and deep gratitude",    radical:"heart"},
+  {char:"帆",py:"fan", el:"water",meaning:"the sail that catches the wind",radical:"wind"},
+  {char:"飞",py:"fei", el:"fire", meaning:"soaring without restraint",   radical:"bird"},
+  {char:"风",py:"feng",el:"wood", meaning:"wind — free and far-reaching",radical:"wind"},
+  {char:"刚",py:"gang",el:"metal",meaning:"unyielding strength",         radical:"刀 blade"},
+  {char:"光",py:"guang",el:"fire",meaning:"brilliant light and glory",   radical:"sun"},
+  {char:"国",py:"guo", el:"earth",meaning:"devoted to the nation",       radical:"country"},
+  {char:"豪",py:"hao", el:"fire", meaning:"heroic and magnanimous",      radical:"high"},
+  {char:"浩",py:"hao", el:"water",meaning:"vast like the sea",           radical:"water"},
+  {char:"鹤",py:"he",  el:"metal",meaning:"the longevity of the crane",  radical:"bird"},
+  {char:"宏",py:"hong",el:"fire", meaning:"grand vision and scale",      radical:"roof"},
+  {char:"辉",py:"hui", el:"fire", meaning:"radiant and glorious",        radical:"light"},
+  {char:"健",py:"jian",el:"earth",meaning:"robust and vital",            radical:"亻 person"},
+  {char:"杰",py:"jie", el:"fire", meaning:"outstanding and heroic",      radical:"wood"},
+  {char:"进",py:"jin", el:"earth",meaning:"always advancing",            radical:"辶 walk"},
+  {char:"峻",py:"jun", el:"earth",meaning:"steep and majestic as a peak",radical:"山 mountain"},
+  {char:"钧",py:"jun", el:"metal",meaning:"balanced and masterful",      radical:"钅 metal"},
+  {char:"凯",py:"kai", el:"earth",meaning:"the music of triumph",        radical:"wind"},
+  {char:"坤",py:"kun", el:"earth",meaning:"grounded and steadfast",      radical:"土 earth"},
+  {char:"磊",py:"lei", el:"earth",meaning:"upright as stacked stones",   radical:"石 stone"},
+  {char:"力",py:"li",  el:"earth",meaning:"strength and power",          radical:"力 force"},
+  {char:"林",py:"lin", el:"wood", meaning:"deep roots, great canopy",    radical:"木 tree"},
+  {char:"龙",py:"long",el:"fire", meaning:"the spirit of the dragon",    radical:"dragon"},
+  {char:"伦",py:"lun", el:"water",meaning:"clear moral principle",       radical:"亻 person"},
+  {char:"茂",py:"mao", el:"wood", meaning:"lush and flourishing",        radical:"艹 plant"},
+  {char:"明",py:"ming",el:"fire", meaning:"clarity of mind and vision",  radical:"sun+moon"},
+  {char:"楠",py:"nan", el:"wood", meaning:"nanmu — the emperor's tree",  radical:"木 tree"},
+  {char:"鹏",py:"peng",el:"fire", meaning:"the mythic roc flying 90,000 li",radical:"bird"},
+  {char:"平",py:"ping",el:"earth",meaning:"balanced and even-handed",    radical:"dry"},
+  {char:"强",py:"qiang",el:"wood",meaning:"powerful and robust",         radical:"弓 bow"},
+  {char:"睿",py:"rui", el:"fire", meaning:"penetrating wisdom",          radical:"eye"},
+  {char:"荣",py:"rong",el:"wood", meaning:"glorious and flourishing",    radical:"艹 plant"},
+  {char:"松",py:"song",el:"wood", meaning:"the pine — steadfast in all seasons",radical:"木 tree"},
+  {char:"桐",py:"tong",el:"wood", meaning:"the phoenix tree — noble",    radical:"木 tree"},
+  {char:"威",py:"wei", el:"earth",meaning:"commanding dignity",          radical:"woman+axe"},
+  {char:"伟",py:"wei", el:"earth",meaning:"great and distinguished",     radical:"亻 person"},
+  {char:"文",py:"wen", el:"wood", meaning:"literary cultivation",        radical:"文 culture"},
+  {char:"旭",py:"xu",  el:"fire", meaning:"the rising morning sun",      radical:"sun"},
+  {char:"阳",py:"yang",el:"fire", meaning:"pure sunlight and yang energy",radical:"sun"},
+  {char:"勇",py:"yong",el:"fire", meaning:"courageous in all things",    radical:"力 force"},
+  {char:"宇",py:"yu",  el:"water",meaning:"vast as the universe",        radical:"roof"},
+  {char:"远",py:"yuan",el:"water",meaning:"far-seeing and far-reaching", radical:"辶 walk"},
+  {char:"岳",py:"yue", el:"earth",meaning:"great as the sacred mountains",radical:"山 mountain"},
+  {char:"志",py:"zhi", el:"wood", meaning:"unwavering ambition",         radical:"heart"},
+  {char:"智",py:"zhi", el:"water",meaning:"deep and penetrating intelligence",radical:"sun"},
+  {char:"钟",py:"zhong",el:"metal",meaning:"sincere as a bell's ring",   radical:"钅 metal"},
+  {char:"竹",py:"zhu", el:"wood", meaning:"bamboo — resilient and upright",radical:"竹 bamboo"},
+  {char:"卓",py:"zhuo",el:"fire", meaning:"outstanding and eminent",     radical:"卜 divine"},
+];
+
+/* ── Gendered Meaning Pools ────────────────────────────────────── */
+const HOBBY_FEMALE = {muziek:["音","韵","律","雅","鸣"],music:["音","韵","律","雅","鸣"],lezen:["文","书","慧","思","典"],reading:["文","书","慧","思","典"],sport:["健","灵","跃","柔","姿"],koken:["馨","香","芳","味","珍"],cooking:["馨","香","芳","味","珍"],reizen:["云","远","行","悦","霞"],travel:["云","远","行","悦","霞"],kunst:["艺","彩","绘","画","华"],art:["艺","彩","绘","画","华"],fotografie:["影","光","镜","晓","明"],photography:["影","光","镜","晓","明"],gaming:["慧","灵","思","悦","清"],natuur:["兰","莲","梅","云","露"],nature:["兰","莲","梅","云","露"],dansen:["舞","婷","姿","翩","韵"],dancing:["舞","婷","姿","翩","韵"],schrijven:["文","诗","雅","慧","思"],writing:["文","诗","雅","慧","思"],default:["慧","灵","雅","清","明"]};
+const HOBBY_MALE   = {muziek:["韵","律","音","鸣","博"],music:["韵","律","音","鸣","博"],lezen:["文","书","智","博","典"],reading:["文","书","智","博","典"],sport:["勇","健","强","武","进"],koken:["博","远","达","明","智"],cooking:["博","远","达","明","智"],reizen:["远","旅","行","阔","达"],travel:["远","旅","行","阔","达"],kunst:["文","艺","博","智","创"],art:["文","艺","博","智","创"],fotografie:["明","光","智","远","观"],photography:["明","光","智","远","观"],gaming:["智","策","豪","博","远"],natuur:["林","松","竹","博","远"],nature:["林","松","竹","博","远"],dansen:["翩","姿","健","博","达"],dancing:["翩","姿","健","博","达"],schrijven:["文","博","诗","志","智"],writing:["文","博","诗","志","智"],default:["志","博","达","智","明"]};
+
+// WISH maps — inspired by Jin Yong's naming vocabulary:
+// virtues (仁义礼), nature-cosmos (风月云霜), chivalric ideals (侠勇忠),
+// and poetic imagery (梦幻逍遥) that define wuxia heroes and heroines
+const WISH_FEMALE = {
+  // Virtues & inner qualities
+  peace:["安","宁","恬","和","澄"],vrede:["安","宁","恬","和","澄"],
+  love:["爱","慕","恩","柔","韵"],liefde:["爱","慕","恩","柔","韵"],
+  wisdom:["慧","思","智","灵","悟"],wijsheid:["慧","思","智","灵","悟"],
+  strength:["坚","毅","勇","烈","韧"],kracht:["坚","毅","勇","烈","韧"],
+  joy:["悦","欢","乐","怡","欣"],vreugde:["悦","欢","乐","怡","欣"],
+  hope:["望","曙","晨","霞","曦"],hoop:["望","曙","晨","霞","曦"],
+  freedom:["逍","遥","云","风","翩"],vrijheid:["逍","遥","云","风","翩"],
+  beauty:["华","雅","姿","婷","绮"],schoonheid:["华","雅","姿","婷","绮"],
+  grace:["婉","柔","婷","莲","雅"],genade:["婉","柔","婷","莲","雅"],
+  courage:["勇","烈","坚","豪","毅"],moed:["勇","烈","坚","豪","毅"],
+  // Jin Yong nature-cosmos imagery
+  moon:["月","霜","皓","婵","素"],maan:["月","霜","皓","婵","素"],
+  snow:["雪","霜","素","冰","白"],sneeuw:["雪","霜","素","冰","白"],
+  wind:["风","云","翩","逸","飘"],wind:["风","云","翩","逸","飘"],
+  flower:["兰","梅","蓉","芙","芳"],bloem:["兰","梅","蓉","芙","芳"],
+  star:["星","灵","曦","明","辉"],ster:["星","灵","曦","明","辉"],
+  dream:["梦","幻","灵","若","烟"],droom:["梦","幻","灵","若","烟"],
+  adventure:["远","逍","遥","行","云"],avontuur:["远","逍","遥","行","云"],
+  harmony:["和","宁","韵","清","澄"],harmonie:["和","宁","韵","清","澄"],
+  light:["曦","晨","霞","明","辉"],licht:["曦","晨","霞","明","辉"],
+  default:["慧","灵","雅","清","若"]
+};
+const WISH_MALE = {
+  // Virtues — drawn from Jin Yong's chivalric ideals
+  peace:["和","宁","安","澄","恬"],vrede:["和","宁","安","澄","恬"],
+  love:["恩","仁","义","情","诚"],liefde:["恩","仁","义","情","诚"],
+  wisdom:["智","谋","睿","博","悟"],wijsheid:["智","谋","睿","博","悟"],
+  strength:["刚","勇","雄","烈","豪"],kracht:["刚","勇","雄","烈","豪"],
+  joy:["乐","豪","悦","欢","达"],vreugde:["乐","豪","悦","欢","达"],
+  hope:["望","旭","曙","晨","曦"],hoop:["望","旭","曙","晨","曦"],
+  freedom:["逍","遥","远","豪","苍"],vrijheid:["逍","遥","远","豪","苍"],
+  // Jin Yong wuxia hero archetypes
+  justice:["义","侠","正","忠","仁"],rechtvaardigheid:["义","侠","正","忠","仁"],
+  courage:["勇","烈","豪","刚","毅"],moed:["勇","烈","豪","刚","毅"],
+  loyalty:["忠","义","诚","信","贞"],loyaliteit:["忠","义","诚","信","贞"],
+  honour:["荣","誉","义","正","刚"],eer:["荣","誉","义","正","刚"],
+  // Nature-cosmos (Jin Yong heroes named after mountains, rivers, sky)
+  dragon:["龙","苍","烈","豪","霄"],draak:["龙","苍","烈","豪","霄"],
+  mountain:["岳","峰","崖","嶂","苍"],berg:["岳","峰","崖","嶂","苍"],
+  wind:["风","云","逍","遥","豪"],wind:["风","云","逍","遥","豪"],
+  star:["辰","旭","曦","昱","灿"],ster:["辰","旭","曦","昱","灿"],
+  dream:["梦","幻","远","逍","豪"],droom:["梦","幻","远","逍","豪"],
+  adventure:["远","逍","遥","豪","苍"],avontuur:["远","逍","遥","豪","苍"],
+  harmony:["和","宁","平","澄","达"],harmonie:["和","宁","平","澄","达"],
+  light:["旭","曦","昱","灿","辉"],licht:["旭","曦","昱","灿","辉"],
+  default:["志","豪","逍","义","智"]
+};
+
+/* ── Classical Quotes ──────────────────────────────────────────── */
+const CLASSICAL_QUOTES = {
+  music:    {text:"余音绕梁，三日不绝",source:"列子·汤问",trans:"The lingering melody wraps the rafters — for three days it does not fade."},
+  reading:  {text:"书山有路勤为径，学海无涯苦作舟",source:"韩愈 (Tang Dynasty)",trans:"Diligence is the path up the mountain of books; perseverance is the boat upon the endless sea of learning."},
+  art:      {text:"胸有成竹",source:"苏轼 (Song Dynasty)",trans:"Before the brush touches paper, the bamboo is already whole in the mind."},
+  nature:   {text:"采菊东篱下，悠然见南山",source:"陶渊明 (Jin Dynasty)",trans:"Picking chrysanthemums beneath the eastern fence, I gaze with ease upon the southern mountains."},
+  travel:   {text:"行万里路，读万卷书",source:"Ming Dynasty proverb",trans:"Walk ten thousand li; read ten thousand volumes — only then does the world fully open."},
+  dance:    {text:"翩若惊鸿，婉若游龙",source:"曹植《洛神赋》",trans:"Graceful as a startled swan; sinuous as a dragon moving through water."},
+  writing:  {text:"文章合为时而著，歌诗合为事而作",source:"白居易 (Tang Dynasty)",trans:"Essays are written for their time; poems are composed for their occasions."},
+  peace:    {text:"宁静致远",source:"诸葛亮《诫子书》",trans:"Only in stillness can one reach far — serenity is the vessel of wisdom."},
+  love:     {text:"问世间，情是何物，直教生死相许",source:"元好问《摸鱼儿》",trans:"I ask the world: what is this thing called love, that it binds two souls through life and death?"},
+  wisdom:   {text:"知者不惑，仁者不忧，勇者不惧",source:"《论语》",trans:"The wise are never confused, the benevolent never troubled, the brave never afraid."},
+  strength: {text:"天行健，君子以自强不息",source:"《易经》",trans:"Heaven moves ceaselessly — the noble person strengthens themselves without pause."},
+  freedom:  {text:"且放白鹿青崖间，须行即骑访名山",source:"李白 (Tang Dynasty)",trans:"Let the white deer roam the green cliffs — when the moment calls, mount up and seek the great mountains."},
+  hope:     {text:"长风破浪会有时，直挂云帆济沧海",source:"李白《行路难》",trans:"The day will come when the gale breaks the waves — then raise the sail and cross the boundless sea."},
+  courage:  {text:"侠之大者，为国为民",source:"金庸《神雕侠侣》",trans:"The greatest chivalry is to serve the nation and its people — the highest calling of a hero."},
+  adventure:{text:"仰天大笑出门去，我辈岂是蓬蒿人",source:"李白《南陵别儿童入京》",trans:"I laugh to the sky as I walk out the door — are we not born for more than the roadside weeds?"},
+  harmony:  {text:"和而不同",source:"《论语》",trans:"Harmony without uniformity — the world's greatest beauty lives in difference held together."},
+  dream:    {text:"人生若只如初见",source:"纳兰性德《木兰花·拟古决绝词》",trans:"If only life were always as it was at first sight — that first pure moment, before the world complicated everything."},
+  default:  {text:"路漫漫其修远兮，吾将上下而求索",source:"屈原《离骚》",trans:"The road ahead is long and the way uncertain — yet I will search, above and below, without rest."}
+};
+function getClassicalQuote(hobby, wish) {
+  const all = (hobby+' '+wish).toLowerCase();
+  if(all.match(/muziek|music|muzikant|musician/)) return CLASSICAL_QUOTES.music;
+  if(all.match(/lezen|reading/))                  return CLASSICAL_QUOTES.reading;
+  if(all.match(/kunst|art|ontwerper|designer/))   return CLASSICAL_QUOTES.art;
+  if(all.match(/natuur|nature/))                  return CLASSICAL_QUOTES.nature;
+  if(all.match(/reizen|travel|avontuur|adventure/)) return CLASSICAL_QUOTES.adventure;
+  if(all.match(/dansen|dancing/))                 return CLASSICAL_QUOTES.dance;
+  if(all.match(/schrijven|writing|schrijver|writer/)) return CLASSICAL_QUOTES.writing;
+  if(all.match(/peace|vrede|rust|nrust/))         return CLASSICAL_QUOTES.peace;
+  if(all.match(/love|liefde|amor/))               return CLASSICAL_QUOTES.love;
+  if(all.match(/wisdom|wijsheid|kennis/))         return CLASSICAL_QUOTES.wisdom;
+  if(all.match(/strength|kracht|sterkte/))        return CLASSICAL_QUOTES.strength;
+  if(all.match(/freedom|vrijheid|vrij/))          return CLASSICAL_QUOTES.freedom;
+  if(all.match(/hope|hoop/))                      return CLASSICAL_QUOTES.hope;
+  if(all.match(/courage|moed|dapper/))            return CLASSICAL_QUOTES.courage;
+  if(all.match(/harmony|harmonie/))               return CLASSICAL_QUOTES.harmony;
+  if(all.match(/dream|droom/))                    return CLASSICAL_QUOTES.dream;
+  return CLASSICAL_QUOTES.default;
+}
+
+/* ── Pinyin map ────────────────────────────────────────────────── */
+const PINYIN_TONES = {
+  "安":"Ān","白":"Bái","陈":"Chén","丁":"Dīng","鄂":"È","方":"Fāng","高":"Gāo","何":"Hé","伊":"Yī","江":"Jiāng","康":"Kāng","林":"Lín","马":"Mǎ","宁":"Níng","欧":"Ōu","潘":"Pān","钱":"Qián","任":"Rèn","宋":"Sòng","唐":"Táng","尤":"Yóu","范":"Fàn","王":"Wáng","徐":"Xú","杨":"Yáng","张":"Zhāng",
+  "艾":"Ài","冰":"Bīng","婵":"Chán","晨":"Chén","春":"Chūn","丹":"Dān","朵":"Duǒ","恩":"Ēn","芳":"Fāng","菲":"Fēi","虹":"Hóng","花":"Huā","慧":"Huì","嘉":"Jiā","静":"Jìng","娟":"Juān","兰":"Lán","磊":"Lěi","丽":"Lì","莲":"Lián","灵":"Líng","露":"Lù","曼":"Màn","梅":"Méi","敏":"Mǐn","明":"Míng","娜":"Nà","妮":"Nī","萍":"Píng","琪":"Qí","琴":"Qín","清":"Qīng","蓉":"Róng","柔":"Róu","珊":"Shān","舒":"Shū","淑":"Shū","婷":"Tíng","薇":"Wēi","雯":"Wén","霞":"Xiá","欣":"Xīn","馨":"Xīn","雪":"Xuě","晓":"Xiǎo","雅":"Yǎ","燕":"Yàn","瑶":"Yáo","怡":"Yí","莹":"Yíng","悦":"Yuè","云":"Yún","泽":"Zé","珍":"Zhēn","芝":"Zhī",
+  "昂":"Áng","博":"Bó","昌":"Chāng","承":"Chéng","程":"Chéng","诚":"Chéng","栋":"Dòng","帆":"Fān","飞":"Fēi","刚":"Gāng","光":"Guāng","国":"Guó","豪":"Háo","浩":"Hào","鹤":"Hè","宏":"Hóng","辉":"Huī","健":"Jiàn","杰":"Jié","进":"Jìn","峻":"Jùn","钧":"Jūn","力":"Lì","龙":"Lóng","伦":"Lún","茂":"Mào","楠":"Nán","鹏":"Péng","平":"Píng","强":"Qiáng","睿":"Ruì","荣":"Róng","松":"Sōng","桐":"Tóng","威":"Wēi","伟":"Wěi","文":"Wén","旭":"Xù","阳":"Yáng","勇":"Yǒng","宇":"Yǔ","远":"Yuǎn","岳":"Yuè","志":"Zhì","智":"Zhì","钟":"Zhōng","竹":"Zhú","卓":"Zhuó",
+  "声":"Shēng","韵":"Yùn","律":"Lǜ","鸣":"Míng","典":"Diǎn","思":"Sī","跃":"Yuè","姿":"Zī","香":"Xiāng","味":"Wèi","行":"Xíng","游":"Yóu","彩":"Cǎi","绘":"Huì","画":"Huà","影":"Yǐng","镜":"Jìng","摄":"Shè","观":"Guān","策":"Cè","幻":"Huàn","翩":"Piān","舞":"Wǔ","笔":"Bǐ","诗":"Shī","著":"Zhù","言":"Yán","导":"Dǎo","仁":"Rén","善":"Shàn","济":"Jì","建":"Jiàn","造":"Zào","工":"Gōng","构":"Gòu","数":"Shù","析":"Xī","美":"Měi","设":"Shè","领":"Lǐng","英":"Yīng","业":"Yè","商":"Shāng","富":"Fù","兴":"Xīng","勤":"Qín","达":"Dá","成":"Chéng","学":"Xué","旅":"Lǚ","阔":"Kuò","武":"Wǔ","创":"Chuàng","华":"Huá","德":"Dé","翠":"Cuì","音":"Yīn","书":"Shū","艺":"Yì",
+  // Jin Yong wish characters
+  "爱":"Ài","慕":"Mù","情":"Qíng","义":"Yì","侠":"Xiá","忠":"Zhōng","正":"Zhèng","信":"Xìn","贞":"Zhēn","毅":"Yì","韧":"Rèn","坚":"Jiān","烈":"Liè","豪":"Háo","谋":"Móu","悟":"Wù","逍":"Xiāo","遥":"Yáo","苍":"Cāng","霄":"Xiāo","玄":"Xuán","旭":"Xù","曙":"Shǔ","曦":"Xī","望":"Wàng","和":"Hé","恬":"Tián","澄":"Chéng","婉":"Wǎn","绮":"Qǐ","若":"Ruò","烟":"Yān","梦":"Mèng","逸":"Yì","飘":"Piāo","芙":"Fú","素":"Sù","皓":"Hào","婵":"Chán","蓉":"Róng","誉":"Yù","荣":"Róng","峰":"Fēng","崖":"Yá","嶂":"Zhàng","辰":"Chén","昱":"Yù","灿":"Càn","诚":"Chéng","雄":"Xiōng"
+};
+function py(char) { return PINYIN_TONES[char] || char; }
+
+/* ── Phonetic Engine ───────────────────────────────────────────── */
+function normalizeSound(str) {
+  return str.toLowerCase().replace(/sch/g,'s').replace(/tch/g,'ch').replace(/ch/g,'sh').replace(/th/g,'t').replace(/ph/g,'f').replace(/oe/g,'u').replace(/ie/g,'i').replace(/aa/g,'a').replace(/ee/g,'i').replace(/oo/g,'u').replace(/ou|au/g,'ao').replace(/eu/g,'e').replace(/ij|ei/g,'ai').replace(/ui/g,'wei').replace(/[^a-z]/g,'');
+}
+function getSyllables(name) {
+  const norm = normalizeSound(name), vowels = 'aeiou', syl = [];
+  let cur = '';
+  for (let i = 0; i < norm.length; i++) {
+    cur += norm[i];
+    if (vowels.includes(norm[i]) && (!vowels.includes(norm[i+1]||'') || cur.length >= 3)) { syl.push(cur); cur = ''; }
+  }
+  if (cur) syl.push(cur);
+  return syl.filter(s => s.length > 0).slice(0, 2);
+}
+function phoneticScore(syllable, entryPy) {
+  const s = syllable.toLowerCase().trim(), p = entryPy.toLowerCase().trim();
+  if (!s||!p) return 0;
+  if (p===s) return 20;
+  if (p.startsWith(s)||s.startsWith(p)) return 15;
+  const getInit = x => { const m = x.match(/^[^aeiou]+/); return m ? m[0] : ''; };
+  const getVow  = x => x.replace(/^[^aeiou]*/,'');
+  const sI=getInit(s),pI=getInit(p),sV=getVow(s),pV=getVow(p);
+  if (sI&&sI===pI&&sV&&sV===pV) return 12;
+  if (sI&&sI===pI) return 7;
+  if (sV&&sV===pV&&sV.length>0) return 5;
+  if (s[0]===p[0]) return 3;
+  return 0;
+}
+function pickPhoneticChar(syllable, exclude, bank, preferEl) {
+  let best = null, bestScore = -1;
+  for (const entry of bank) {
+    if (exclude.includes(entry.char)) continue;
+    let sc = phoneticScore(syllable, entry.py);
+    if (entry.el === preferEl) sc += 2;
+    if (sc > bestScore) { bestScore = sc; best = entry; }
+  }
+  return best || bank[Math.abs((syllable.charCodeAt(0)||0)) % bank.length];
+}
+function getChars(map, input) {
+  const key = (input||'').toLowerCase().trim();
+  for (const [k, v] of Object.entries(map)) { if (key.includes(k)) return v; }
+  return map.default;
+}
+function pick(arr, seed) { return arr[Math.abs(seed) % arr.length]; }
+
+/* ── Main Generate ─────────────────────────────────────────────── */
+function generate() {
+  const firstname = document.getElementById('inp-firstname').value.trim();
+  const lastname  = document.getElementById('inp-lastname').value.trim();
+  const hobby     = document.getElementById('inp-hobby').value.trim();
+  const wish      = document.getElementById('inp-job').value.trim();
+  const gender    = selectedGender;
+  if (!firstname || !gender) return;
+
+  const isFemale     = gender === 'female';
+  const phoneticBank = isFemale ? PHONETIC_FEMALE : PHONETIC_MALE;
+  const hobbyMap     = isFemale ? HOBBY_FEMALE    : HOBBY_MALE;
+  const wishMap      = isFemale ? WISH_FEMALE     : WISH_MALE;
+
+  // Surname
+  const surnameSource = lastname || firstname;
+  const fl = surnameSource.toLowerCase().replace(/[^a-z]/g,'')[0] || 'w';
+  const sData   = SURNAMES[fl] || SURNAMES['w'];
+  const surname = sData.char;
+  const harmonicEl = WUXING[sData.el].generates;
+  const wxH        = WUXING[harmonicEl];
+
+  // Phonetic given name
+  const syllables = getSyllables(firstname);
+  const syl1 = syllables[0] || normalizeSound(firstname).slice(0,3) || 'a';
+  const phon1 = pickPhoneticChar(syl1, [surname], phoneticBank, harmonicEl);
+
+  let given1, given2, twoPhonetic = false, phon2 = null;
+  let meaning1, meaning2, radical1;
+
+  if (syllables.length >= 2) {
+    phon2 = pickPhoneticChar(syllables[1], [surname, phon1.char], phoneticBank, harmonicEl);
+    given1 = phon1.char;
+    given2 = phon2.char === phon1.char
+      ? pickPhoneticChar(syllables[1], [surname, phon1.char, phon2.char], phoneticBank, harmonicEl).char
+      : phon2.char;
+    twoPhonetic = true;
+    meaning1 = phon1.meaning;
+    meaning2 = (phoneticBank.find(e => e.char === given2) || {meaning:'luminous'}).meaning;
+    radical1 = phon1.radical;
+  } else {
+    given1 = phon1.char; meaning1 = phon1.meaning; radical1 = phon1.radical;
+    const seed = (hobby.charCodeAt(0)||65) + (wish.charCodeAt(0)||65) + firstname.length;
+    const pool = hobby ? getChars(hobbyMap, hobby) : getChars(wishMap, wish);
+    given2 = pick(pool.filter(c => c !== given1 && c !== surname), seed);
+    meaning2 = (phoneticBank.find(e => e.char === given2) || {meaning:'auspicious'}).meaning;
+  }
+
+  const full   = surname + given1 + given2;
+  const pySurn = py(surname);
+  const py1    = py(given1);
+  const py2    = py(given2);
+  const pinyin = `${pySurn} ${py1}${py2}`;
+  const fullWestern = lastname ? `${firstname} ${lastname}` : firstname;
+
+  // DOM
+  const genderLabel = isFemale ? 'Female Name 女名' : 'Male Name 男名';
+  document.getElementById('res-gender-label').textContent  = genderLabel;
+  document.getElementById('res-full').textContent          = full;
+  document.getElementById('res-pinyin').textContent        = pinyin;
+  document.getElementById('res-romanized').textContent     = `Sounds like: ${py1}${py2} · ${meaning1}, ${meaning2}`;
+  document.getElementById('res-surname').textContent       = surname;
+  document.getElementById('res-surname-py').textContent    = pySurn;
+  document.getElementById('res-given').textContent         = given1 + given2;
+  document.getElementById('res-given-py').textContent      = py1 + py2;
+  document.getElementById('res-meaning').textContent       = `❝ ${meaning1.charAt(0).toUpperCase()+meaning1.slice(1)}, ${meaning2} ❞`;
+  document.getElementById('res-element-badge').innerHTML   = `<div class="element-badge">${wxH.emoji} ${wxH.name} · ${wxH.virtue}</div>`;
+
+  // Reasoning
+  const surnameRow = lastname
+    ? `Your family name <strong>${surname}</strong> (${pySurn}) is derived from the initial of your last name <strong>${lastname}</strong>. In Chinese culture (家谱), the surname comes first — it is the root from which the given name grows. The <strong>${surname}</strong> clan's legacy: <em>${sData.history}</em>`
+    : `Your family name <strong>${surname}</strong> (${pySurn}) is derived from the first letter of <strong>${firstname}</strong>. In Chinese tradition, the surname leads everything. The <strong>${surname}</strong> surname: <em>${sData.history}</em>`;
+
+  const elementRow = `The <strong>${surname}</strong> surname belongs to <strong>${WUXING[sData.el].name}</strong> — the element of ${WUXING[sData.el].virtue}. Following the principle of mutual generation (五行相生): <strong>${WUXING[sData.el].name} generates ${wxH.name}</strong>. Your given name draws from the <strong>${wxH.name}</strong> element — ${wxH.virtue} — so that your name creates a living current of energy flowing in one harmonious direction.`;
+
+  let phRow1, phRow2;
+  if (twoPhonetic) {
+    phRow1 = `The first given character <strong>${given1}</strong> (${py1}) is the top phonetic match for the opening syllable of <strong>${firstname}</strong>. Its pinyin <em>"${py1}"</em> mirrors how your name begins. With its <em>${radical1}</em> component, it carries the meaning: <em>"${meaning1}"</em>. Chinese naming demands every character be both euphonic (好听) and meaningful (有意义).`;
+    phRow2 = `The second given character <strong>${given2}</strong> (${py2}) mirrors the second syllable of <strong>${firstname}</strong>, with pinyin <em>"${py2}"</em>. It means <em>"${meaning2}"</em>. Spoken together, <em>${py1}${py2}</em> flows as a genuine Chinese given name — the 双字名 (two-character name) style, now used by over 80% of Chinese people — while carrying the unmistakable echo of <strong>${firstname}</strong>. Like Jin Yong's heroes whose names ring with natural imagery (令狐冲, 黄蓉, 郭靖), your name sounds as if it belongs in the world of the rivers and lakes.`;
+  } else {
+    phRow1 = `The first given character <strong>${given1}</strong> (${py1}) is the closest phonetic match to <strong>${firstname}</strong> in the character bank. Its pinyin <em>"${py1}"</em> echoes your name's opening sound — the technique of 音译 (phonetic transliteration). With its <em>${radical1}</em> component, the character means: <em>"${meaning1}"</em>.`;
+    phRow2 = `The second given character <strong>${given2}</strong> (${py2}) is chosen for depth — inspired by your ${hobby ? `hobby (<strong>${hobby}</strong>)` : wish ? `wish (<strong>${wish}</strong>)` : 'personal essence'}. In the tradition of Jin Yong's wuxia characters — whose names carry their deepest nature (逍遥, 无忌, 郭靖) — this character encodes what you aspire to: <em>"${meaning2}"</em>. One character carries the music of your name; the other carries your heart's intention.`;
+  }
+
+  const genderPhilosophy = isFemale
+    ? `Following classical tradition, your name draws from characters of beauty, nature, and inner grace — the 女 (female), 艹 (flower), and 玉 (jade) radical families that have defined feminine names for three thousand years of Chinese culture.`
+    : `Following classical tradition, your name draws from characters of strength, virtue, and outward achievement — the 亻 (person), 木 (tree), and 力 (force) radical families that have shaped masculine names across three millennia.`;
+
+  const harmonyRow = `Together, <strong>${given1}${given2}</strong> forms a name where surname and given name flow in elemental harmony. The ${WUXING[sData.el].name} of <strong>${surname}</strong> generates the ${wxH.name} of your given name — as ${WUXING[sData.el].season.toLowerCase()} gives rise to ${wxH.season.toLowerCase()}. A name that flows in the direction of 相生 (mutual generation) is considered not only beautiful, but fortunate.`;
+
+  const rows = [
+    {icon:"姓", text: surnameRow},
+    {icon:"五", text: elementRow},
+    {icon:"音", text: phRow1},
+    {icon:"意", text: phRow2},
+    {icon: isFemale ? "女" : "男", text: genderPhilosophy},
+    {icon:"和", text: harmonyRow},
+    {icon:"全", text: `Your complete Chinese name is <strong>${full}</strong>, pronounced <em>${pinyin}</em>. Written surname first, given name second — it stands as a genuine Chinese name while carrying the unmistakable sound of <strong>${fullWestern}</strong>. A bridge between worlds, built on three thousand years of tradition.`}
+  ];
+
+  document.getElementById('res-reasoning-grid').innerHTML = rows.map(r =>
+    `<div class="reasoning-row"><div class="reasoning-icon">${r.icon}</div><div class="reasoning-text">${r.text}</div></div>`
+  ).join('');
+
+  // Classical quote
+  const quote = getClassicalQuote(hobby, wish);
+  document.getElementById('res-classical-text').textContent   = quote.text;
+  document.getElementById('res-classical-source').textContent = quote.source;
+  document.getElementById('res-classical-trans').textContent  = '"' + quote.trans + '"';
+  document.getElementById('res-classical').style.display      = 'block';
+
+  const res = document.getElementById('result');
+  res.classList.remove('show'); void res.offsetWidth; res.classList.add('show');
+  document.getElementById('share-btn').classList.add('visible');
+
+  window._cardData = {
+    full, pinyin, pySurn, py1, py2, surname, given1, given2,
+    meaning1, meaning2,
+    element: wxH.name, elementEmoji: wxH.emoji, elementVirtue: wxH.virtue,
+    surnameElement: WUXING[sData.el].name,
+    surnameElementEmoji: WUXING[sData.el].emoji,
+    westernName: fullWestern,
+    gender: isFemale ? '女名' : '男名',
+    genderLabel: isFemale ? 'Female' : 'Male',
+    wish,
+    quote,
+    // Character details for given name card breakdown
+    given1detail: phoneticBank.find(e => e.char === given1) || {char:given1, py:py1.replace(/[̄́̌̀]/g,''), el:harmonicEl, meaning:meaning1, radical:'classical'},
+    given2detail: phoneticBank.find(e => e.char === given2) || {char:given2, py:py2.replace(/[̄́̌̀]/g,''), el:harmonicEl, meaning:meaning2, radical:'classical'},
+    surnameData: sData,
+    // Full reasoning rows for the card
+    rows: [
+      { icon:'姓', label:'Surname', text: surnameRow.replace(/<[^>]+>/g,'') },
+      { icon:'五', label:'Five Elements', text: elementRow.replace(/<[^>]+>/g,'') },
+      { icon:'音', label:'Phonetics', text: phRow1.replace(/<[^>]+>/g,'') },
+      { icon:'意', label:'Meaning & Wish', text: phRow2.replace(/<[^>]+>/g,'') },
+      { icon: isFemale?'女':'男', label: isFemale?'Female Tradition':'Male Tradition',
+        text: (isFemale
+          ? `Your name draws from the 女 (female), 艹 (flower), and 玉 (jade) radical families — the classical vocabulary of feminine names used for three thousand years of Chinese culture.`
+          : `Your name draws from the 亻 (person), 木 (tree), and 力 (force) radical families — the classical vocabulary of masculine names used across three millennia of Chinese culture.`) },
+      { icon:'和', label:'Harmony', text: harmonyRow.replace(/<[^>]+>/g,'') },
+    ]
+  };
+}
+
+/* ── Download Card ─────────────────────────────────────────────── */
+async function shareCard() {
+  const d = window._cardData;
+  if (!d) return;
+
+  // Load QR library
+  await new Promise((resolve, reject) => {
+    if (window.QRCode) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+  const qrDiv = document.createElement('div');
+  qrDiv.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:130px;height:130px';
+  document.body.appendChild(qrDiv);
+  new QRCode(qrDiv, {
+    text: 'https://www.youtube.com/@Bushikesangde',
+    width: 130, height: 130,
+    colorDark: '#e8dcc8', colorLight: '#120808',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+  await new Promise(r => setTimeout(r, 120));
+  const qrCanvas = qrDiv.querySelector('canvas');
+
+  // Exact print size: 10×15cm @ 300 DPI
+  const W = 1181, H = 1772;
+  const canvas = document.getElementById('share-canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  /* ── Helpers ─────────────────────────────────────────────────── */
+  function wrap(text, maxW, font) {
+    ctx.font = font;
+    const words = text.split(' '), lines = [];
+    let cur = '';
+    for (const w of words) {
+      const t = cur ? cur + ' ' + w : w;
+      if (ctx.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; }
+      else cur = t;
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  }
+  function drawW(text, x, maxW, y, font, color, lh, align = 'center') {
+    ctx.font = font; ctx.fillStyle = color; ctx.textAlign = align;
+    wrap(text, maxW, font).forEach(l => { ctx.fillText(l, x, y); y += lh; });
+    return y;
+  }
+  function rule(y, x1, x2, color = 'rgba(180,30,30,0.45)') {
+    const g = ctx.createLinearGradient(x1,y,x2,y);
+    g.addColorStop(0,'transparent'); g.addColorStop(.5,color); g.addColorStop(1,'transparent');
+    ctx.strokeStyle = g; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x1,y); ctx.lineTo(x2,y); ctx.stroke();
+  }
+  function scaledChinese(text, cx, y, maxW, maxSize) {
+    let sz = maxSize;
+    ctx.font = `bold ${sz}px serif`;
+    while (ctx.measureText(text).width > maxW && sz > 36) { sz -= 4; ctx.font = `bold ${sz}px serif`; }
+    ctx.fillStyle = '#e8dcc8';
+    ctx.shadowColor = 'rgba(180,30,30,0.5)'; ctx.shadowBlur = 36;
+    ctx.textAlign = 'center'; ctx.fillText(text, cx, y); ctx.shadowBlur = 0;
+  }
+
+  const P = 68, iW = W - P * 2;
+  let Y = 0;
+
+  /* ── Background ──────────────────────────────────────────────── */
+  ctx.fillStyle = '#0d0a0a'; ctx.fillRect(0,0,W,H);
+  const gL = ctx.createRadialGradient(140,380,0,140,380,580);
+  gL.addColorStop(0,'rgba(180,30,30,0.12)'); gL.addColorStop(1,'transparent');
+  ctx.fillStyle = gL; ctx.fillRect(0,0,W,H);
+  const gR = ctx.createRadialGradient(W-120,160,0,W-120,160,460);
+  gR.addColorStop(0,'rgba(200,150,50,0.06)'); gR.addColorStop(1,'transparent');
+  ctx.fillStyle = gR; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle = 'rgba(200,150,50,0.26)'; ctx.lineWidth = 2; ctx.strokeRect(30,30,W-60,H-60);
+  ctx.strokeStyle = 'rgba(200,150,50,0.07)'; ctx.lineWidth = 1; ctx.strokeRect(42,42,W-84,H-84);
+  [[54,54],[W-54,54],[54,H-54],[W-54,H-54]].forEach(([cx,cy]) => {
+    ctx.strokeStyle = 'rgba(200,150,50,0.42)'; ctx.lineWidth = 2;
+    const s=20, dx=cx<W/2?1:-1, dy=cy<H/2?1:-1;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+dx*s,cy);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx,cy+dy*s);ctx.stroke();
+  });
+
+  /* ══════════════════════════ SECTION 1: IDENTITY ════════════════
+     Budget: ~88 to ~560px  (~472px)
+  ═══════════════════════════════════════════════════════════════ */
+  Y = 88;
+
+  // 起名 header + western name
+  ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(200,150,50,0.38)';
+  ctx.font = '28px Georgia,serif'; ctx.fillText('起  名', W/2, Y); Y += 32;
+  rule(Y, W*.34, W*.66); Y += 22;
+  ctx.fillStyle = 'rgba(232,220,200,0.42)'; ctx.font = 'italic 30px Georgia,serif';
+  ctx.fillText(d.westernName, W/2, Y); Y += 34;
+  ctx.fillStyle = 'rgba(200,150,50,0.42)'; ctx.font = '22px Georgia,serif';
+  ctx.fillText('↓  becomes', W/2, Y); Y += 44;
+
+  // Big Chinese name — fixed height block, no overlap
+  const nameSize = 160;
+  scaledChinese(d.full, W/2, Y + nameSize - 20, iW - 20, nameSize);
+  Y += nameSize + 10; // clear space below baseline
+
+  // Divider between name and pinyin
+  rule(Y, W*.3, W*.7, 'rgba(180,30,30,0.35)'); Y += 22;
+
+  // Pinyin — its own line, well separated
+  ctx.fillStyle = '#c8963e'; ctx.font = 'italic 42px Georgia,serif'; ctx.textAlign = 'center';
+  ctx.fillText(d.pinyin, W/2, Y); Y += 48;
+  rule(Y, W*.26, W*.74); Y += 24;
+
+  // Surname | Given split — two columns with more breathing room
+  const cY = Y;
+  ctx.fillStyle = 'rgba(200,150,50,0.48)'; ctx.font = '18px Cinzel,Georgia,serif'; ctx.textAlign = 'center';
+  ctx.fillText('SURNAME  姓', W*.25, cY);
+  ctx.fillText('GIVEN NAME  名', W*.75, cY);
+  Y = cY + 18;
+  ctx.fillStyle = '#e8dcc8'; ctx.font = '80px serif';
+  ctx.fillText(d.surname,         W*.25, Y+82);
+  ctx.fillText(d.given1+d.given2, W*.75, Y+82);
+  ctx.fillStyle = '#c8963e'; ctx.font = 'italic 28px Georgia,serif';
+  ctx.fillText(d.pySurn,   W*.25, Y+114);
+  ctx.fillText(d.py1+d.py2, W*.75, Y+114);
+  ctx.strokeStyle = 'rgba(200,150,50,0.15)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(W/2, cY); ctx.lineTo(W/2, Y+126); ctx.stroke();
+  Y = Y + 134;
+  rule(Y, W*.16, W*.84); Y += 18;
+
+  // Meaning + element badge
+  Y = drawW(`❝ ${d.meaning1.charAt(0).toUpperCase()+d.meaning1.slice(1)}, ${d.meaning2} ❞`,
+    W/2, iW-30, Y, 'italic 25px Georgia,serif', 'rgba(232,220,200,0.6)', 32) + 10;
+  ctx.fillStyle = 'rgba(200,150,50,0.52)'; ctx.font = '17px Cinzel,Georgia,serif'; ctx.textAlign = 'center';
+  ctx.fillText(`${d.elementEmoji} ${d.element}  ·  ${d.surnameElementEmoji} ${d.surnameElement} → ${d.element}  ·  ${d.genderLabel} ${d.gender}`, W/2, Y);
+  Y += 30;
+
+  /* ═══════════════════ SECTION 2: CHARACTER BOXES ════════════════ */
+  rule(Y, P, W-P, 'rgba(200,150,50,0.3)'); Y += 18;
+  ctx.fillStyle = 'rgba(200,150,50,0.55)'; ctx.font = '18px Cinzel,Georgia,serif'; ctx.textAlign = 'center';
+  ctx.fillText('CHARACTER BREAKDOWN  字解', W/2, Y); Y += 22;
+
+  const g1d = d.given1detail, g2d = d.given2detail, sD = d.surnameData;
+  const bGap = 14, bW3 = Math.floor((iW - bGap*2) / 3);
+  const BH = 140;
+
+  function miniBox(char, pyStr, meaning, elName, bx, by) {
+    ctx.fillStyle = 'rgba(180,30,30,0.08)'; ctx.fillRect(bx, by, bW3, BH);
+    ctx.strokeStyle = 'rgba(180,30,30,0.22)'; ctx.lineWidth = 1; ctx.strokeRect(bx, by, bW3, BH);
+    ctx.fillStyle = '#e8dcc8'; ctx.font = 'bold 52px serif'; ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(180,30,30,0.3)'; ctx.shadowBlur = 14;
+    ctx.fillText(char, bx+bW3/2, by+56); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#c8963e'; ctx.font = 'italic 19px Georgia,serif';
+    ctx.fillText(pyStr, bx+bW3/2, by+78);
+    ctx.fillStyle = 'rgba(232,220,200,0.62)'; ctx.font = 'italic 15px Georgia,serif';
+    const ml = wrap(meaning, bW3-14, 'italic 15px Georgia,serif');
+    let my = by+96; ml.slice(0,2).forEach(l => { ctx.fillText(l, bx+bW3/2, my); my += 18; });
+    ctx.fillStyle = 'rgba(200,150,50,0.42)'; ctx.font = '13px Cinzel,Georgia,serif';
+    ctx.fillText(elName, bx+bW3/2, by+BH-9);
+  }
+
+  miniBox(d.surname,  d.pySurn, sD.meaning,              WUXING[sD.el].name,           P,              Y);
+  miniBox(d.given1,   d.py1,    g1d.meaning||d.meaning1, WUXING[g1d.el||'water'].name, P+bW3+bGap,     Y);
+  miniBox(d.given2,   d.py2,    g2d.meaning||d.meaning2, WUXING[g2d.el||'water'].name, P+(bW3+bGap)*2, Y);
+  Y += BH + 14;
+
+  /* ═════════════════════ SECTION 3: REASONING ════════════════════ */
+  rule(Y, P, W-P, 'rgba(200,150,50,0.3)'); Y += 18;
+  ctx.fillStyle = 'rgba(200,150,50,0.55)'; ctx.font = '18px Cinzel,Georgia,serif'; ctx.textAlign = 'center';
+  ctx.fillText('THE ART BEHIND YOUR NAME', W/2, Y); Y += 22;
+
+  const g1el = WUXING[g1d.el||'water'], g2el = WUXING[g2d.el||'water'];
+  const reasonParagraph =
+    `${d.full} — "${d.meaning1.charAt(0).toUpperCase()+d.meaning1.slice(1)}, ${d.meaning2}" — is the Chinese name of ${d.westernName}. ` +
+    `The surname ${d.surname} (${d.pySurn}) comes from the initial of "${d.westernName.split(' ').slice(-1)[0]||d.westernName}" and carries the legacy of the ${d.surnameData.meaning} ${d.surnameData.char} clan. ` +
+    `The given name ${d.given1}${d.given2} (${d.py1}${d.py2}) was crafted in two steps: ` +
+    `${d.given1} (${d.py1}) echoes the sound of "${d.westernName.split(' ')[0]}", belongs to the ${g1el.name} element, and means "${g1d.meaning||d.meaning1}"; ` +
+    `${d.given2} (${d.py2}) was drawn from ${d.wish ? `the wish for ${d.wish}` : 'personal essence'}, belongs to the ${g2el.name} element, and means "${g2d.meaning||d.meaning2}" — ` +
+    `in the Jin Yong tradition of encoding one's deepest nature into a name. ` +
+    `The full name flows in elemental harmony: the ${d.surnameElement} of ${d.surname} generates the ${d.element} of ${d.given1}${d.given2}, as ${WUXING[d.surnameData?.el||'fire']?.season||'one season'} gives rise to the next.`;
+
+  const RFONT = '21px Georgia,serif';
+  const rLines = wrap(reasonParagraph, iW-24, RFONT);
+  const rBoxH = rLines.length * 29 + 26;
+  ctx.fillStyle = 'rgba(255,255,255,0.016)'; ctx.fillRect(P, Y, iW, rBoxH);
+  ctx.strokeStyle = 'rgba(180,30,30,0.28)'; ctx.lineWidth = 1; ctx.strokeRect(P, Y, iW, rBoxH);
+  ctx.fillStyle = 'rgba(180,30,30,0.4)';   ctx.fillRect(P, Y, 4, rBoxH);
+  ctx.fillStyle = 'rgba(232,220,200,0.68)'; ctx.font = RFONT; ctx.textAlign = 'left';
+  let ty = Y + 24;
+  rLines.forEach(l => { ctx.fillText(l, P+14, ty); ty += 29; });
+  Y += rBoxH + 16;
+
+  /* ══════════════════ SECTION 4: QUOTE ═══════════════════════════ */
+  rule(Y, P, W-P); Y += 16;
+  Y = drawW(d.quote.text, W/2, iW-30, Y, '28px serif', '#c8963e', 34) + 6;
+  ctx.fillStyle = 'rgba(200,150,50,0.32)'; ctx.font = '15px Cinzel,Georgia,serif'; ctx.textAlign = 'center';
+  ctx.fillText(d.quote.source, W/2, Y); Y += 22;
+  Y = drawW('"'+d.quote.trans+'"', W/2, iW-50, Y, 'italic 18px Georgia,serif', 'rgba(232,220,200,0.42)', 24) + 14;
+
+  /* ══════════════════ SECTION 5: FOOTER + QR ═════════════════════ */
+  rule(Y, W*.22, W*.78, 'rgba(200,150,50,0.15)'); Y += 16;
+  ctx.fillStyle = 'rgba(232,220,200,0.12)'; ctx.font = '17px Georgia,serif'; ctx.textAlign = 'center';
+  ctx.fillText('名以载志，音以传情' + (d.wish ? `  ·  愿：${d.wish}` : ''), W/2, Y); Y += 26;
+
+  // QR left + text right
+  const QR = 140, qrY = Y, qrX = P;
+  if (qrCanvas) {
+    ctx.fillStyle = '#120808'; ctx.fillRect(qrX-7, qrY-7, QR+14, QR+14);
+    ctx.strokeStyle = 'rgba(200,150,50,0.4)'; ctx.lineWidth = 1;
+    ctx.strokeRect(qrX-7, qrY-7, QR+14, QR+14);
+    ctx.drawImage(qrCanvas, qrX, qrY, QR, QR);
+  }
+  // Right-side text
+  const tx = P + QR + 26, tW = iW - QR - 26;
+  ctx.fillStyle = 'rgba(200,150,50,0.6)'; ctx.font = '20px Cinzel,Georgia,serif'; ctx.textAlign = 'left';
+  ctx.fillText('SCAN TO WATCH', tx, qrY + 24);
+  ctx.fillStyle = 'rgba(200,150,50,0.45)'; ctx.font = '17px Cinzel,Georgia,serif';
+  ctx.fillText('扫码观看', tx, qrY + 48);
+  ctx.fillStyle = 'rgba(200,150,50,0.35)'; ctx.font = 'italic 16px Georgia,serif';
+  ctx.fillText('@Bushikesangde', tx, qrY + 70);
+  // Follow text
+  Y = drawW('Follow to learn more about China, Chinese culture and Chinese name-giving.',
+    tx, tW, qrY + 94, '16px Georgia,serif', 'rgba(232,220,200,0.38)', 22, 'left');
+
+  // "Follow more to learn about China" below QR
+  const belowQR = qrY + QR + 14;
+  if (belowQR > Y) Y = belowQR;
+  rule(Y, W*.25, W*.75, 'rgba(200,150,50,0.12)'); Y += 18;
+  ctx.fillStyle = 'rgba(200,150,50,0.45)'; ctx.font = 'italic 20px Georgia,serif'; ctx.textAlign = 'center';
+  ctx.fillText('Follow for more to learn about China · 关注了解更多中国文化', W/2, Y); Y += 30;
+
+  /* ── Export exactly 1181×1772 ───────────────────────────────── */
+  const fc = document.createElement('canvas');
+  fc.width = W; fc.height = H;
+  fc.getContext('2d').drawImage(canvas, 0, 0);
+  document.body.removeChild(qrDiv);
+  fc.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `${d.full}-name-card-10x15cm.png`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 8000);
+  }, 'image/png');
+}
+</script>
+</body>
+</html>
